@@ -1,3 +1,27 @@
 -- Keymaps are automatically loaded on the VeryLazy event
 -- Default keymaps that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/keymaps.lua
 -- Add any additional keymaps here
+
+
+----------------------------------
+--- User Defined Code Commands ---
+----------------------------------
+local wk = require("which-key")
+wk.add({
+  { "<leader>cu", group = "User Keymaps" },
+})
+
+-- Restart LSP (python)
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "python",
+  callback = function(event)
+    vim.keymap.set("n", "<leader>cur", function()
+      local clients = vim.lsp.get_clients({ name = "pyright" })
+      for _, client in ipairs(clients) do
+        client:stop()
+      end
+      vim.cmd("edit")
+      vim.notify("Pyright restarted", vim.log.levels.INFO)
+    end, { desc = "Restart Pyright", buffer = event.buf })
+  end,
+})
