@@ -18,10 +18,12 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.keymap.set("n", "<leader>cur", function()
       local clients = vim.lsp.get_clients({ name = "pyright" })
       for _, client in ipairs(clients) do
-        client:stop()
+        client.request("workspace/executeCommand", {
+          command = "pyright.restartserver",
+          arguments = {},
+        }, nil, 0)
       end
-      vim.cmd("edit")
-      vim.notify("Pyright restarted", vim.log.levels.INFO)
-    end, { desc = "Restart Pyright", buffer = event.buf })
+      vim.notify("Pyright reindexed", vim.log.levels.INFO)
+    end, { desc = "Reindex Pyright", buffer = event.buf })
   end,
 })
