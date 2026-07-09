@@ -9,6 +9,7 @@ return {
       { "<leader>ac", group = "claude" },
       { "<leader>ag", group = "github copilot", icon = { icon = "", color = "orange" } },
       { "<leader>cu", group = "User Keymaps" },
+      { "<leader>j", group = "jupyter", icon = { icon = "", color = "orange" } },
     },
   },
 }
