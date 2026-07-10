@@ -145,13 +145,21 @@ return {
       -- points at a dedicated venv. This is Molten's plumbing only — your
       -- project code still runs in the KERNEL you pick with <leader>jk.
       vim.g.python3_host_prog = host_py
+      -- jupyter_client (8.x) writes kernel-<uuid>.json into the runtime dir but
+      -- does NOT create it; a missing dir makes MoltenInit fail with ENOENT.
+      -- Ensure it exists (respects XDG_DATA_HOME, falls back to ~/.local/share).
+      local data_home = vim.env.XDG_DATA_HOME
+      if not data_home or data_home == "" then
+        data_home = vim.fn.expand("~/.local/share")
+      end
+      vim.fn.mkdir(data_home .. "/jupyter/runtime", "p")
       vim.g.molten_image_provider = "image.nvim"
       vim.g.molten_output_win_max_height = 20
       vim.g.molten_auto_open_output = false
       vim.g.molten_wrap_output = true
       -- Show short outputs as virtual text next to the cell; open the float for big ones.
       vim.g.molten_virt_text_output = true
-      vim.g.molten_virt_lines_off_by_1 = true
+      vim.g.molten_virt_lines_off_by_1 = false
     end,
     keys = {
       { "<leader>ji", "<cmd>MoltenInit<cr>", desc = "Init kernel" },
