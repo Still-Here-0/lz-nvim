@@ -10,6 +10,24 @@ return {
       -- Auto-run without asking: read-only tools are safe. bash/edit stay manual.
       trusted_tools = { "buffer", "file", "glob", "grep", "gitdiff", "selection", "clipboard" },
       resources = { },
+      -- Custom named prompts (in addition to the shipped Explain/Review/Fix/
+      -- Optimize/Docs/Tests/Commit). Each `mapping` registers a global n/v keymap.
+      prompts = {
+        -- Fix the buffer's LSP diagnostics. The `buffer` scope carries diagnostics.
+        FixDiagnostics = {
+          prompt = "Fix the LSP diagnostics in this buffer. Explain each fix briefly.",
+          tools = { "buffer" },
+          mapping = "<leader>agD",
+          description = "Fix Diagnostics (Copilot Chat)",
+        },
+        -- Draft a PR title + description from the staged changes (read-only).
+        PR = {
+          prompt = "Write a PR title and description for the staged changes.",
+          tools = { "gitdiff" },
+          mapping = "<leader>agP",
+          description = "PR Title & Description (Copilot Chat)",
+        },
+      },
       -- Extend the default system prompt with tool-selection rules so the model
       -- prefers dedicated, trusted (read-only) tools over the general-purpose
       -- bash tool. The plugin auto-appends its own COPILOT_BASE + tool_use
@@ -35,6 +53,10 @@ return {
         "programs, package managers, builds, multi-step shell pipelines, system",
         "info). If a trusted read-only tool can answer the question, use it first.",
         "</toolSelectionRules>",
+        -- editPreviewRule disabled — the model no longer has to print a fenced
+        -- diff preview before invoking the `edit` tool. Remove the block-comment
+        -- wrapper below to re-enable it.
+        --[==[
         "",
         "<editPreviewRule>",
         "Before calling the `edit` tool, you MUST first show the intended change",
@@ -66,6 +88,7 @@ return {
         " }",
         "```",
         "</editPreviewRule>",
+        ]==]
       }, "\n"),
       -- Custom chat mappings (deep-merged with the plugin defaults).
       mappings = {
@@ -184,6 +207,12 @@ return {
         "<leader>agp",
         function() require("CopilotChat").select_prompt() end,
         desc = "Prompt Actions (Copilot Chat)",
+        mode = { "n", "x" },
+      },
+      {
+        "<leader>agm",
+        function() require("CopilotChat").select_model() end,
+        desc = "Select Model (Copilot Chat)",
         mode = { "n", "x" },
       },
       {
