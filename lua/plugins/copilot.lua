@@ -10,6 +10,9 @@ return {
       -- Auto-run without asking: read-only tools are safe. bash/edit stay manual.
       trusted_tools = { "buffer", "file", "glob", "grep", "gitdiff", "selection", "clipboard" },
       resources = { },
+      -- Auto-attach the active buffer to every new chat (same as typing
+      -- `> #buffer:active` manually). Accepts a string or list of strings.
+      sticky = { "#buffer:active" },
       -- Custom named prompts (in addition to the shipped Explain/Review/Fix/
       -- Optimize/Docs/Tests/Commit). Each `mapping` registers a global n/v keymap.
       prompts = {
@@ -53,45 +56,84 @@ return {
         "programs, package managers, builds, multi-step shell pipelines, system",
         "info). If a trusted read-only tool can answer the question, use it first.",
         "</toolSelectionRules>",
-        -- editPreviewRule disabled — the model no longer has to print a fenced
-        -- diff preview before invoking the `edit` tool. Remove the block-comment
-        -- wrapper below to re-enable it.
-        --[==[
         "",
-        "<editPreviewRule>",
-        "Before calling the `edit` tool, you MUST first show the intended change",
-        "as a fenced ```diff code block that reads like `git diff` / `diff -U`:",
+        "<editReliabilityRules>",
+        "The `edit` tool requires the diff to match the file's CURRENT bytes",
+        "exactly. To avoid failed/partial edits, follow these rules:",
+        "",
+        "- Before every `edit`, re-read the exact target lines from the LIVE",
+        "  file (prefer `buffer`; else `file`/`grep`). Never reconstruct context",
+        "  from memory or from an earlier read — prior edits shift line numbers",
+        "  and content.",
+        "- Always include a proper `@@ ... @@` hunk header. Do not start a hunk",
+        "  with bare context lines.",
+        "- Copy context lines VERBATIM: exact indentation (spaces vs tabs),",
+        "  trailing whitespace, quotes, and punctuation must match byte-for-byte.",
+        "- Beware non-ASCII/multibyte content (icons, nerd-font glyphs, emoji,",
+        "  boxdrawing, non-breaking spaces). Do NOT retype such lines from a",
+        "  rendered view — they corrupt easily. Anchor the hunk on a nearby",
+        "  PURE-ASCII line instead, or if none exists, avoid `edit` and use a",
+        "  line-addressed shell command via bash (e.g. `sed -i 'Na\\...'`) that",
+        "  needs no context match.",
+        "- Anchor each hunk on a unique, unchanged nearby line; keep context",
+        "  minimal (1-3 lines) so the match stays unambiguous.",
+        "- Make one focused change per hunk. For multiple edits in a file,",
+        "  re-verify positions between edits since earlier hunks move later ones.",
+        "- After an edit fails, do NOT blindly retry: re-read the file, confirm",
+        "  the exact current text, then rebuild the diff from that.",
+        "- Preserve the file's existing style (indent width, quote style, commas,",
+        "  semicolons) so edits don't introduce diagnostics.",
+        "</editReliabilityRules>",
+        "",
+        "<editAlternativesRules>",
+        "The `edit` tool shows the user a preview they can accept or deny. Any",
+        "OTHER way of modifying a file (bash: `sed -i`, `tee`, `>`/`>>` redirects,",
+        "`awk`, `patch`, `python`, etc.) BYPASSES that preview — the user cannot",
+        "review the change before it lands. This is only acceptable as a fallback",
+        "when `edit` genuinely cannot do the job (e.g. multibyte-glyph context).",
+        "",
+        "Whenever you decide to modify a file WITHOUT the `edit` tool, you MUST",
+        "FIRST print a fenced ```diff block showing exactly what you intend to",
+        "change, so the user can review it:",
         "",
         "- Begin with `--- a/<absolute_path>` then `+++ b/<absolute_path>`.",
-        "- Include a few unchanged context lines around the edit for orientation.",
-        "- Prefix each removed line (current content) with `-`.",
-        "- Prefix each added line (proposed content) with `+`.",
-        "- Prefix unchanged context lines with a single space.",
+        "- Include a proper `@@ ... @@` header and a few unchanged context lines.",
+        "- Prefix removed lines with `-`, added lines with `+`, context with a space.",
+        "- The diff MUST match what the subsequent command will actually do.",
         "",
-        "Base the `-` side on the CURRENT text, preferring the live buffer over",
-        "disk since it may hold unsaved edits. The diff MUST match exactly what",
-        "the subsequent `edit` call will apply.",
+        "Only AFTER presenting that diff preview may you run the bash command that",
+        "performs the edit. Prefer `edit` whenever possible; reach for these",
+        "alternatives only when necessary.",
         "",
-        "Only AFTER presenting that diff preview may you invoke the `edit` tool.",
-        "Keep the preview and the actual edit identical (same file, same lines,",
-        "same resulting content) so the user can review before approving.",
-        "",
-        "Example of a valid diff preview:",
+        "Example of a valid diff preview before a bash edit:",
         "",
         "```diff",
         "--- a/home/user/project/init.lua",
         "+++ b/home/user/project/init.lua",
+        "@@ -1,3 +1,3 @@",
         " local opts = {",
         "-  number = false,",
         "+  number = true,",
-        "+  relativenumber = true,",
         " }",
         "```",
-        "</editPreviewRule>",
-        ]==]
+        "</editAlternativesRules>",
       }, "\n"),
       -- Custom chat mappings (deep-merged with the plugin defaults).
       mappings = {
+        -- Move every built-in chat mapping into the <leader>ag* group.
+        -- Disable the built-in <C-l> reset (both modes). Reset lives on <leader>agx.
+        reset = { normal = "", insert = "" },
+        -- Preserve the original way to send messages: <CR> (normal) and <C-s> (insert).
+        submit_prompt = { normal = "<CR>", insert = "<C-s>" },
+        accept_diff = { normal = "<leader>aga", insert = "" },
+        complete = { insert = "<Tab>" },
+        show_info = { normal = "<leader>agi" },
+        show_diff = { normal = "<leader>agf" },
+        show_help = { normal = "<leader>agh" },
+        jump_to_diff = { normal = "<leader>agj" },
+        quickfix_answers = { normal = "<leader>agQa" },
+        quickfix_diffs = { normal = "<leader>agQd" },
+        yank_diff = { normal = "<leader>agy" },
         -- Like `gd` (show_diff) but for the `edit` TOOL CALL near the cursor.
         -- The edit tool keeps its unified diff in tool_call.arguments (JSON),
         -- which never becomes a fenced code block, so the built-in `gd` (which
@@ -99,7 +141,7 @@ return {
         -- edit call, applies its diff to a scratch copy of the target file, and
         -- opens the same vimdiff overlay `gd` uses.
         show_tool_diff = {
-          normal = "gD",
+          normal = "<leader>agc",
           callback = function(source)
             local chat = require("CopilotChat").chat
             local diff = require("CopilotChat.utils.diff")
@@ -165,9 +207,68 @@ return {
                 vim.api.nvim_win_call(chat.winnr, function() vim.cmd("diffthis") end)
               end,
               on_hide = function()
-                vim.api.nvim_win_call(chat.winnr, function() vim.cmd("diffoff") end)
+              vim.api.nvim_win_call(chat.winnr, function() vim.cmd("diffoff") end)
               end,
             })
+          end,
+        },
+        -- Tool-call previews (the accept/deny prompt) are rendered as virtual
+        -- lines (extmark `virt_lines`), which Neovim NEVER wraps — long bash
+        -- commands / edit JSON are truncated at the window's right edge with no
+        -- way to scroll. This resolves the tool call(s) under the cursor and
+        -- shows their full name + arguments in a scrollable floating window.
+        show_tool_call = {
+          normal = "<leader>agt",
+          callback = function()
+            local chat = require("CopilotChat").chat
+            local utils = require("CopilotChat.utils")
+
+            local message = chat:get_message("assistant", true)
+            if not message or not message.tool_calls or #message.tool_calls == 0 then
+              vim.notify("No tool call under cursor", vim.log.levels.INFO)
+              return
+            end
+
+            local lines = {}
+            for _, tc in ipairs(message.tool_calls) do
+              table.insert(lines, string.format("# %s (%s)", tc.name, tostring(tc.id)))
+              local args = utils.json_decode(tc.arguments)
+              if type(args) == "table" then
+                for k, v in pairs(args) do
+                  local val = type(v) == "string" and v or vim.inspect(v)
+                  for _, vl in ipairs(vim.split(val, "\n", { plain = true })) do
+                    table.insert(lines, string.format("%s: %s", k, vl))
+                  end
+                end
+              else
+                for _, vl in ipairs(vim.split(tostring(tc.arguments or ""), "\n", { plain = true })) do
+                  table.insert(lines, vl)
+                end
+              end
+              table.insert(lines, "")
+            end
+
+            local buf = vim.api.nvim_create_buf(false, true)
+            vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+            vim.bo[buf].modifiable = false
+            vim.bo[buf].filetype = "markdown"
+
+            local width = math.floor(vim.o.columns * 0.7)
+            local height = math.min(#lines + 1, math.floor(vim.o.lines * 0.7))
+            local win = vim.api.nvim_open_win(buf, true, {
+              relative = "editor",
+              width = width,
+              height = height,
+              row = math.floor((vim.o.lines - height) / 2),
+              col = math.floor((vim.o.columns - width) / 2),
+              style = "minimal",
+              border = "rounded",
+              title = " Tool Call ",
+            })
+            vim.wo[win].wrap = true
+            vim.wo[win].linebreak = false
+            vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = buf, nowait = true })
+            vim.keymap.set("n", "<esc>", "<cmd>close<cr>", { buffer = buf, nowait = true })
           end,
         },
       },
@@ -236,7 +337,21 @@ return {
             table.insert(names, 1, "default")
           end
           vim.ui.select(names, { prompt = "Load chat: " }, function(choice)
-            if choice and choice ~= "" then chat.load(choice) end
+            if choice and choice ~= "" then
+              -- The plugin's load() calls finish(true) after clearing the
+              -- buffer, which re-injects config.sticky (`#buffer:active`) as a
+              -- fresh user block. The saved history already carries its own
+              -- sticky line, so this produced a duplicate `> #buffer:active`
+              -- on top of the loaded chat. Temporarily blank out sticky while
+              -- loading, then restore it so new prompts still get it.
+              local saved_sticky = chat.config.sticky
+              chat.config.sticky = nil
+              local ok = pcall(chat.load, choice)
+              chat.config.sticky = saved_sticky
+              if not ok then
+                vim.notify("Failed to load chat: " .. choice, vim.log.levels.ERROR)
+              end
+            end
           end)
         end,
         desc = "Load Chat (Copilot Chat)",
@@ -382,13 +497,14 @@ return {
       function _G.CopilotChatWinbar()
         local cc_ok, cc = pcall(require, "CopilotChat")
         local model = (cc_ok and cc.config and cc.config.model) or "?"
-        local ctx = "?/?"
+        local ctx = "?"
         if cc_ok and cc.chat then
           local tc, tm = cc.chat.token_count, cc.chat.token_max_count
           if tc and tm then
-            ctx = string.format("%d/%d", tc, tm)
+            local pct = tm > 0 and math.floor((tc / tm) * 100 + 0.5) or 0
+            ctx = string.format("%d%%", pct)
           elseif tm then
-            ctx = string.format("0/%d", tm)
+            ctx = "0%"
           end
         end
         local month = _G.CopilotChatQuotaPct and (_G.CopilotChatQuotaPct .. "%") or "…"
@@ -430,6 +546,12 @@ return {
             return
           end
           vim.wo[win].winbar = "%{v:lua.CopilotChatWinbar()}"
+          -- Force wrapping so long tool commands (bash) and edit-tool JSON
+          -- arguments don't run off-screen. `linebreak = false` lets very long
+          -- unbroken tokens (paths, flags, `--...`) wrap at the window edge
+          -- instead of overflowing horizontally.
+          vim.wo[win].wrap = true
+          vim.wo[win].linebreak = false
           refresh_quota()
         end,
       })
@@ -458,5 +580,15 @@ return {
       suggestion = { enabled = false },
       panel = { enabled = false },
     },
+  },
+
+  -- Make render-markdown.nvim (LazyVim markdown extra) also render the
+  -- Copilot Chat buffer, so Markdown tables/headings/code blocks display as
+  -- rendered UI instead of raw `|`/`---` text. lazy.nvim merges `ft` lists
+  -- across specs, so this just appends the filetype to the existing config.
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    optional = true,
+    ft = { "copilot-chat" },
   },
 }

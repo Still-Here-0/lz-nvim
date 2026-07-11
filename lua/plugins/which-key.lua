@@ -5,11 +5,12 @@ return {
   "folke/which-key.nvim",
   opts = {
     spec = {
-      { "<leader>a", group = "ai", mode = { "n", "v" } },
-      { "<leader>ac", group = "claude" },
-      { "<leader>ag", group = "github copilot", icon = { icon = "", color = "orange" } },
+      { "<leader>a", group = "AI", mode = { "n", "v" } },
+      { "<leader>ac", group = "Claude" },
+      { "<leader>ag", group = "Github copilot", icon = { icon = "", color = "orange" } },
+      { "<leader>agQ", group = "Quickfix copilot" },
       { "<leader>cu", group = "User Keymaps" },
-      { "<leader>j", group = "jupyter", icon = { icon = "", color = "orange" } },
+      { "<leader>j", group = "Jupyter", icon = { icon = "", color = "orange" } },
     },
   },
 }
