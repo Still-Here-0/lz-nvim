@@ -25,7 +25,7 @@ return {
                 "<leader>acs",
                 "<cmd>ClaudeCodeTreeAdd<cr>",
                 desc = "Add file",
-                ft = { "NvimTree", "neo-tree", "oil" },
+                ft = { "NvimTree", "neo-tree", "oil", "snacks_picker_list" },
             },
             { "<leader>acy", "<cmd>ClaudeCodeDiffAccept<cr>", desc = "Accept diff" },
             { "<leader>acd", "<cmd>ClaudeCodeDiffDeny<cr>", desc = "Deny diff" },
