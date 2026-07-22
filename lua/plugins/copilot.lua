@@ -392,9 +392,20 @@ return {
             local has_content = false
             if ok and messages then
               for _, message in ipairs(messages) do
-                if message.content and vim.trim(message.content) ~= "" then
-                  has_content = true
-                  break
+                if message.content then
+                  -- Strip sticky/marker lines (`> #buffer:active`, `> $model`,
+                  -- etc.) that the plugin auto-injects into a fresh chat, so an
+                  -- untouched conversation still counts as empty.
+                  local real = {}
+                  for _, line in ipairs(vim.split(message.content, "\n", { plain = true })) do
+                    if not line:match("^%s*>") then
+                      table.insert(real, line)
+                    end
+                  end
+                  if vim.trim(table.concat(real, "\n")) ~= "" then
+                    has_content = true
+                    break
+                  end
                 end
               end
             end
