@@ -34,7 +34,7 @@ local function ensure_host_venv()
   r = vim.system({
     host_py, "-m", "pip", "install", "-q", "--upgrade",
     "pip", "pynvim", "jupyter_client", "ipykernel", "nbformat",
-    "pandas", "pyarrow", "matplotlib",
+    "pandas", "pyarrow", "matplotlib", "pylatexenc",
   }):wait()
   if r.code ~= 0 then
     error("Molten: host pip install failed\n" .. (r.stderr or ""))
@@ -161,16 +161,35 @@ return {
       vim.g.molten_virt_text_output = true
       vim.g.molten_virt_lines_off_by_1 = false
     end,
-    keys = {
-      { "<leader>ji", "<cmd>MoltenInit<cr>", desc = "Init kernel" },
-      { "<leader>jk", setup_project_kernel, desc = "Setup project kernel (pip install ipykernel)" },
-      { "<leader>je", "<cmd>MoltenEvaluateOperator<cr>", desc = "Evaluate operator" },
-      { "<leader>jl", "<cmd>MoltenEvaluateLine<cr>", desc = "Evaluate line" },
-      { "<leader>jr", "<cmd>MoltenReevaluateCell<cr>", desc = "Re-evaluate cell" },
-      { "<leader>jv", ":<C-u>MoltenEvaluateVisual<cr>gv", mode = "v", desc = "Evaluate selection" },
-      { "<leader>jo", "<cmd>MoltenShowOutput<cr>", desc = "Show output" },
-      { "<leader>jh", "<cmd>MoltenHideOutput<cr>", desc = "Hide output" },
-      { "<leader>jd", "<cmd>MoltenDelete<cr>", desc = "Delete cell" },
-    },
+    config = function()
+      local function set_maps(buf)
+        local function map(mode, lhs, rhs, desc)
+          vim.keymap.set(mode, lhs, rhs, { buffer = buf, desc = desc })
+        end
+        map("n", "<leader>ji", "<cmd>MoltenInit<cr>", "Init kernel")
+        map("n", "<leader>jk", setup_project_kernel, "Setup project kernel (pip install ipykernel)")
+        map("n", "<leader>je", "<cmd>MoltenEvaluateOperator<cr>", "Evaluate operator")
+        map("n", "<leader>jl", "<cmd>MoltenEvaluateLine<cr>", "Evaluate line")
+        map("n", "<leader>jr", "<cmd>MoltenReevaluateCell<cr>", "Re-evaluate cell")
+        map("v", "<leader>jv", ":<C-u>MoltenEvaluateVisual<cr>gv", "Evaluate selection")
+        map("n", "<leader>jo", "<cmd>MoltenShowOutput<cr>", "Show output")
+        map("n", "<leader>jh", "<cmd>MoltenHideOutput<cr>", "Hide output")
+        map("n", "<leader>jd", "<cmd>MoltenDelete<cr>", "Delete cell")
+      end
+      -- Buffer-local keymaps so <leader>j* only exist in molten filetypes.
+      vim.api.nvim_create_autocmd("FileType", {
+        group = vim.api.nvim_create_augroup("MoltenKeys", { clear = true }),
+        pattern = { "python", "markdown", "quarto" },
+        callback = function(a)
+          set_maps(a.buf)
+        end,
+      })
+      -- Plugin lazy-loads on `ft`, so the triggering buffer's FileType event
+      -- has already fired; apply the maps to it now.
+      local ft = vim.bo.filetype
+      if ft == "python" or ft == "markdown" or ft == "quarto" then
+        set_maps(0)
+      end
+    end,
   },
 }

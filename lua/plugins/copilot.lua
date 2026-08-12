@@ -592,14 +592,4 @@ return {
       panel = { enabled = false },
     },
   },
-
-  -- Make render-markdown.nvim (LazyVim markdown extra) also render the
-  -- Copilot Chat buffer, so Markdown tables/headings/code blocks display as
-  -- rendered UI instead of raw `|`/`---` text. lazy.nvim merges `ft` lists
-  -- across specs, so this just appends the filetype to the existing config.
-  {
-    "MeanderingProgrammer/render-markdown.nvim",
-    optional = true,
-    ft = { "copilot-chat" },
-  },
 }
