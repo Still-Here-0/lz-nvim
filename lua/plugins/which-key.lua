@@ -1,14 +1,13 @@
 return {
   -- Single source of truth for the <leader>a "ai" group label.
-  -- The claude/copilot specs each suppress their own default label with
+  -- The claude/sidekick specs each suppress their own default label with
   -- `{ "<leader>a", false }`, so this is the only place it's declared.
   "folke/which-key.nvim",
   opts = {
     spec = {
       { "<leader>a", group = "AI", mode = { "n", "v" } },
       { "<leader>ac", group = "Claude" },
-      { "<leader>ag", group = "Github copilot", icon = { icon = "", color = "orange" } },
-      { "<leader>agQ", group = "Quickfix copilot" },
+      { "<leader>as", group = "Sidekick (Copilot CLI)", icon = { icon = "", color = "orange" } },
       { "<leader>cu", group = "User Keymaps", icon = { icon = "🛠", color = "green" } },
     },
   },

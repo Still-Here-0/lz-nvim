@@ -6,6 +6,7 @@ return {
         -- LSPs
         "pyright",
         "lua-language-server",
+        "copilot-language-server",
         "json-lsp",
         "marksman",
         "rust-analyzer",
