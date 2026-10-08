@@ -21,6 +21,18 @@ return {
   -- H/I in the explorer, <c-h>/<c-i> in the files and grep pickers.
   "folke/snacks.nvim",
   opts = {
+    -- Always use markdown for scratch buffers instead of inheriting the
+    -- filetype of the current buffer, so one scratch per cwd/branch can hold
+    -- both notes and fenced code blocks.
+    scratch = {
+      ft = "markdown",
+      -- Values < 1 are a fraction of the screen (default style is a fixed
+      -- width = 100, height = 30).
+      win = {
+        width = 0.92,
+        height = 0.88,
+      },
+    },
     picker = {
       sources = {
         explorer = {
