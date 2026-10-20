@@ -7,15 +7,11 @@
 -- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
 
--- Format-on-save only for prettier-handled filetypes; vim.g.autoformat = false
--- keeps everything else manual (<leader>cf).
+-- Format-on-save only for text/markup filetypes; vim.g.autoformat = false
+-- keeps code files manual (<leader>cf).
 vim.api.nvim_create_autocmd("FileType", {
-  group = vim.api.nvim_create_augroup("prettier_autoformat", { clear = true }),
-  pattern = {
-    "markdown", "markdown.mdx", "json", "jsonc", "yaml",
-    "css", "scss", "html",
-    "javascript", "javascriptreact", "typescript", "typescriptreact",
-  },
+  group = vim.api.nvim_create_augroup("text_autoformat", { clear = true }),
+  pattern = { "markdown", "markdown.mdx", "html", "tex" },
   callback = function()
     vim.b.autoformat = true
   end,
