@@ -101,6 +101,7 @@ return {
     opts = {
       backend = "kitty",
       processor = "magick_cli",
+      hijack_file_patterns = {},
       integrations = {}, -- don't auto-render images in markdown; molten drives it
       max_width = 100,
       max_height = 12,

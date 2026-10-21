@@ -21,6 +21,9 @@ return {
   -- H/I in the explorer, <c-h>/<c-i> in the files and grep pickers.
   "folke/snacks.nvim",
   opts = {
+    -- On WSL, ConPTY breaks terminal image placement; images open in Windows
+    -- apps instead (see config/autocmds.lua).
+    image = { enabled = vim.fn.has("wsl") == 0 },
     -- Always use markdown for scratch buffers instead of inheriting the
     -- filetype of the current buffer, so one scratch per cwd/branch can hold
     -- both notes and fenced code blocks.

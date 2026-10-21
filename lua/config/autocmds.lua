@@ -31,3 +31,18 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.opt_local.wrap = false
   end,
 })
+
+if vim.fn.has("wsl") == 1 then
+  vim.api.nvim_create_autocmd("BufReadCmd", {
+    group = vim.api.nvim_create_augroup("wsl_open_images", { clear = true }),
+    pattern = { "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp", "*.tiff", "*.avif", "*.heic" },
+    callback = function(event)
+      local windows_path = vim.system({ "wslpath", "-w", vim.api.nvim_buf_get_name(event.buf) }):wait().stdout
+      vim.system({ "explorer.exe", vim.trim(windows_path) }, { detach = true })
+      vim.bo[event.buf].buftype = "nofile"
+      vim.schedule(function()
+        Snacks.bufdelete(event.buf)
+      end)
+    end,
+  })
+end
