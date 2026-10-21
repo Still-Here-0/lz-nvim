@@ -8,6 +8,20 @@
 ----------------------------------
 -- The "<leader>cu" group label lives in lua/plugins/which-key.lua.
 
+vim.keymap.set("n", "<leader>cub", function()
+  local path = vim.fn.expand("%:p")
+  if path == "" then
+    vim.notify("No file to open", vim.log.levels.WARN)
+    return
+  end
+  if vim.fn.has("wsl") == 1 then
+    local win_path = vim.trim(vim.system({ "wslpath", "-w", path }):wait().stdout)
+    vim.system({ "explorer.exe", win_path }, { detach = true })
+  else
+    vim.ui.open(path)
+  end
+end, { desc = "Open file in browser" })
+
 -- Reindex / restart Pyright. Bound only while pyright is attached to the buffer.
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
