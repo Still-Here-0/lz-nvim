@@ -37,7 +37,7 @@ if vim.fn.has("wsl") == 1 then
     group = vim.api.nvim_create_augroup("wsl_open_images", { clear = true }),
     pattern = { "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp", "*.tiff", "*.avif", "*.heic" },
     callback = function(event)
-      local windows_path = vim.system({ "wslpath", "-w", vim.api.nvim_buf_get_name(event.buf) }):wait().stdout
+      local windows_path = vim.system({ "wslpath", "-w", vim.api.nvim_buf_get_name(event.buf) }):wait().stdout or ""
       vim.system({ "explorer.exe", vim.trim(windows_path) }, { detach = true })
       vim.bo[event.buf].buftype = "nofile"
       vim.schedule(function()
