@@ -1,24 +1,6 @@
--- <c-h>/<c-i> toggle hidden/ignored in the files and grep pickers (on top of
--- the default <a-h>/<a-i>). Mapping <c-i> also stops it from acting as <Tab>
--- (select); needs a terminal that tells the two apart (e.g. ghostty/kitty).
-local toggle_win = {
-  input = {
-    keys = {
-      ["<c-h>"] = { "toggle_hidden", mode = { "i", "n" } },
-      ["<c-i>"] = { "toggle_ignored", mode = { "i", "n" } },
-    },
-  },
-  list = {
-    keys = {
-      ["<c-h>"] = "toggle_hidden",
-      ["<c-i>"] = "toggle_ignored",
-    },
-  },
-}
-
 return {
   -- Show hidden (dotfiles) and gitignored files by default. Toggle live with
-  -- H/I in the explorer, <c-h>/<c-i> in the files and grep pickers.
+  -- <a-h>/<a-i> (snacks' default in every picker, explorer included).
   "folke/snacks.nvim",
   opts = {
     -- On WSL, ConPTY breaks terminal image placement; images open in Windows
@@ -41,18 +23,39 @@ return {
         explorer = {
           hidden = true,
           ignored = true,
+          -- Drop the explorer's extra H/I toggles so <a-h>/<a-i> are the only ones.
+          win = {
+            list = {
+              keys = {
+                ["H"] = false,
+                ["I"] = false,
+              },
+            },
+          },
         },
         files = {
           hidden = true,
           ignored = true,
-          win = toggle_win,
+          -- Descend into symlinked folders (e.g. My_Mind_Mirror -> the vault).
+          follow = true,
         },
         grep = {
-          hidden = true,
           ignored = true,
-          win = toggle_win,
         },
       },
     },
+  },
+  -- Lowercase keys open on the cwd Neovim was started in, uppercase on the root
+  -- dir (the reverse of LazyVim). LazyVim's "root dir" follows the current
+  -- buffer's LSP/git root, so it jumps to another project when editing a file
+  -- that lives elsewhere (e.g. the Obsidian vault behind a symlink).
+  keys = {
+    { "<leader>fe", function() Snacks.explorer() end, desc = "Explorer Snacks (cwd)" },
+    { "<leader>fE", function() Snacks.explorer({ cwd = LazyVim.root() }) end, desc = "Explorer Snacks (root dir)" },
+    { "<leader>e", "<leader>fe", desc = "Explorer Snacks (cwd)", remap = true },
+    { "<leader>E", "<leader>fE", desc = "Explorer Snacks (root dir)", remap = true },
+    { "<leader><space>", LazyVim.pick("files", { root = false }), desc = "Find Files (cwd)" },
+    { "<leader>ff", LazyVim.pick("files", { root = false }), desc = "Find Files (cwd)" },
+    { "<leader>fF", LazyVim.pick("files"), desc = "Find Files (root dir)" },
   },
 }
