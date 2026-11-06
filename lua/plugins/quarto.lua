@@ -5,7 +5,8 @@
 -- diagnostics) inside the markdown buffer.
 --
 -- Only activated in notebook buffers (name ends in .ipynb), so plain markdown
--- files are left alone. Start the kernel first (<leader>ji / :MoltenInit).
+-- files are left alone. Notebooks with saved outputs start a kernel on open
+-- (see molten.lua); otherwise start one first (<leader>ji / :MoltenInit).
 return {
   {
     "quarto-dev/quarto-nvim",
