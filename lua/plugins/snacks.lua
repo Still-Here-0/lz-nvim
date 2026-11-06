@@ -19,6 +19,14 @@ return {
       },
     },
     picker = {
+      actions = {
+        open_external = function(picker, item)
+          if not item then
+            return
+          end
+          require("util.open_external")(Snacks.picker.util.path(item))
+        end,
+      },
       sources = {
         explorer = {
           hidden = true,
@@ -29,6 +37,7 @@ return {
               keys = {
                 ["H"] = false,
                 ["I"] = false,
+                ["<leader>fo"] = "open_external",
               },
             },
           },
