@@ -35,8 +35,11 @@ return {
       -- (they're prettier's highest precedence), so skip them when the
       -- project defines its own prettier config.
       opts.formatters.prettier.prepend_args = function(_, ctx)
+        -- Prettier 3 also reads .gitignore as an ignore file, so gitignored
+        -- files came back unformatted. Only .prettierignore is used.
+        local args = { "--ignore-path", ".prettierignore" }
         if not vim.bo[ctx.buf].filetype:find("^markdown") then
-          return {}
+          return args
         end
         local project_config = vim.fs.find({
           ".prettierrc",
@@ -57,9 +60,9 @@ return {
           stop = vim.uv.os_homedir(),
         })
         if #project_config > 0 then
-          return {}
+          return args
         end
-        return { "--print-width", "80", "--prose-wrap", "always" }
+        return vim.list_extend(args, { "--print-width", "80", "--prose-wrap", "always" })
       end
     end,
   },

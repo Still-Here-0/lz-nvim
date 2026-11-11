@@ -37,7 +37,7 @@ return {
               keys = {
                 ["H"] = false,
                 ["I"] = false,
-                ["<leader>fo"] = "open_external",
+                ["<leader>fuo"] = "open_external",
               },
             },
           },

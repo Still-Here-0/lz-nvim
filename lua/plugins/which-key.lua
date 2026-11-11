@@ -9,6 +9,7 @@ return {
       { "<leader>ac", group = "Claude" },
       { "<leader>as", group = "Sidekick (Copilot CLI)", icon = { icon = "", color = "orange" } },
       { "<leader>cu", group = "User Keymaps", icon = { icon = "🛠", color = "green" } },
+      { "<leader>fu", group = "User Keymaps", icon = { icon = "🛠", color = "green" } },
     },
   },
   config = function(_, opts)

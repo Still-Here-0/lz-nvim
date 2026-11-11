@@ -10,7 +10,10 @@
 return {
   {
     "quarto-dev/quarto-nvim",
-    dependencies = { "jmbuhr/otter.nvim", "nvim-treesitter/nvim-treesitter" },
+    -- nvim-lspconfig lazy-loads on LazyFile (BufReadPost), which never fires for
+    -- a .ipynb (jupytext reads it via BufReadCmd). Load it first so the Python
+    -- server attaches to otter's hidden buffer; otherwise hover (K) etc. are empty.
+    dependencies = { "neovim/nvim-lspconfig", "jmbuhr/otter.nvim", "nvim-treesitter/nvim-treesitter" },
     ft = { "quarto", "markdown" },
     opts = {
       lspFeatures = {

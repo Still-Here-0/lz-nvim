@@ -4,7 +4,7 @@ return {
     opts = {
       ensure_installed = {
         -- LSPs
-        "pyright",
+        "basedpyright",
         "lua-language-server",
         "copilot-language-server",
         "json-lsp",

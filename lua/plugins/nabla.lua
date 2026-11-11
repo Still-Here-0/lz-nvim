@@ -178,6 +178,7 @@ end
 
 local function render(buf)
   buf = buf or vim.api.nvim_get_current_buf()
+  if not vim.api.nvim_buf_is_valid(buf) then return end
   if not math_ft[vim.bo[buf].filetype] then return end
   vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
   local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)

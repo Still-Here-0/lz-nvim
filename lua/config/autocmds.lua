@@ -32,6 +32,20 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+-- Disable Snacks smooth scrolling in markdown. render-markdown fits wide tables
+-- to the window by hiding each row (`conceal_lines`) and drawing it as several
+-- virtual lines, but always shows the cursor's row raw. Every j/k therefore
+-- changes the screen height of the table, Neovim shifts the view, and
+-- snacks.scroll animates that shift line by line, dragging the cursor along;
+-- each drag re-triggers render-markdown, so the cursor bounces around the table.
+vim.api.nvim_create_autocmd("FileType", {
+  group = vim.api.nvim_create_augroup("markdown_no_smooth_scroll", { clear = true }),
+  pattern = { "markdown", "markdown.mdx" },
+  callback = function(event)
+    vim.b[event.buf].snacks_scroll = false
+  end,
+})
+
 if vim.fn.has("wsl") == 1 then
   vim.api.nvim_create_autocmd("BufReadCmd", {
     group = vim.api.nvim_create_augroup("wsl_open_images", { clear = true }),

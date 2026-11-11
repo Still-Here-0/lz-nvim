@@ -5,6 +5,7 @@
 vim.opt.winbar = "%=%m %f"
 vim.g.autoformat = false
 vim.opt.swapfile = false
+vim.g.lazyvim_python_lsp = "basedpyright"
 
 -- Keep AI suggestions out of the blink.cmp completion menu. LazyVim's AI
 -- extras only register a completion source when this is true; completion stays
